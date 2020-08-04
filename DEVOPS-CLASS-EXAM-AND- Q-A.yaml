@@ -140,9 +140,138 @@ spec:
   volumes:
   - name: redis-storage-moti
     emptyDir: {}
-  
-  
+---
+#12
 
+#create PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-1
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "mnt/data"
+
+ #creat PVC   
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-1-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+ #attached PVC to POD
+---      
+apiVersion: v1
+kind: Pod
+metadata:
+  spec:
+    volumes:
+      - name: pv-1-claim
+        persistentVolumeClaim:
+          claimName: pv-1-claim
+  creationTimestamp: null
+  labels:
+    run: use-pv
+  name: use-pvspec-moti
+  containers:
+  - image: nginx
+    name: use-pv
+    volumeMounts:
+      - mountPath: "/data"
+        name: task-pv-storage
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+---
+# 13
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.16
+        ports:
+# update the image version and record (for rollout)          
+# kubectl set image deployment nginx-deploy nginx=nginx:1.17 --record
+  
+---
+  #14
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-resolver
+    labels:
+      app: nginx
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        name: nginx-resolver  
+        labels:
+          app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx
+          ports:
+---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: nginx-resolver-service
+  spec:
+    type: ClusterIp
+    selector:
+      app: nginx
+# use the busybox for dns lookup and record to file
+# kubectl run -it --rm --restart=Never busybox --image=busybox:1.28 -- nslookup   nginx-resolver-service >> /root/nginx-yourname.svc        
+
+#15
+
+Create a static pod on node01 called nginx-critical with image nginx. Create this pod on node01 and make sure that it is recreated/restarted automatically in case of a failure
+  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-critical
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  nodeName: node01 
 
 
                 
