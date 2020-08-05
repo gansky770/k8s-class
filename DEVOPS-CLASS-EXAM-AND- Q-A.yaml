@@ -348,3 +348,10 @@ spec:
           name: nginx
           resources: {}
   status: {}
+
+
+
+  #kubectl apply -f  webapp.yaml  --record  |  recording
+  #kubectl rollout undo  deployment webapp --to-revision=2  |rollout to rev 2
+  #kubectl rollout history deployment webapp | history of revisions
+  # kubectl autoscale deployment webapp --cpu-percent=85 --min=10 --max=20k
