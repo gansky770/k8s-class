@@ -111,19 +111,20 @@ spec:
 ---
   #10
   
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-analytics
-spec:
-  capacity:
-    storage: 100Gi
-  accessModes:
-  - ReadWriteMany
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: manual
-  hostpath:
-    path: /pv/data-analytics
+  apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: pv-analystics
+    labels:
+      type: local
+  spec:
+    storageClassName: manual
+    capacity:
+      storage: 10Gi
+    accessModes:
+      - ReadWriteMany
+    hostPath:
+      path: "/pv/data-analystics"
 ---
   #11
 apiVersion: v1
@@ -269,7 +270,7 @@ spec:
   containers:
   - name: nginx
     image: nginx
-  nodeName: node01 
+  nodeName: ip-172-31-43-119.eu-west-1.compute.internal 
 
 ---
 
@@ -296,3 +297,54 @@ spec:
       value: "beta"
 
                 
+
+
+
+      #16.2
+--- 
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: null
+    labels:
+      run: nginx
+    name: nginx
+  spec:
+    containers:
+    - image: nginx
+      name: nginx
+      resources: {}
+    dnsPolicy: ClusterFirst
+    restartPolicy: Never
+    nodeSelector:
+      kubernetes.io/arch: amd64
+  status: {}       
+
+---
+  #scale deployments
+
+  #kubectl scale deployment --replicas=3 webapp
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: webapp
+    name: webapp
+  spec:
+    replicas: 5
+    selector:
+      matchLabels:
+        app: webapp
+    strategy: {}
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: webapp
+      spec:
+        containers:
+        - image: nginx
+          name: nginx
+          resources: {}
+  status: {}
